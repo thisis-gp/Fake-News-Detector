@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from streamlit_lottie import st_lottie
+from model import predict
 
 def load_animation(url):
     r = requests.get(url)
@@ -21,9 +22,12 @@ with st.container():
 
     with left_column:
         if input_text:
-            st.write("This news is True")
+            if predict(input_text) == 1:
+                st.write("This news is True")
+            else:
+                st.write("This news is Fake")
         else:
-            st.write("This news is Fake")
+            st.write("Enter input text")
 
     with right_column:
         if news_animation:
