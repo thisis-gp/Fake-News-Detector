@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from streamlit_lottie import st_lottie
-from model import predict
+from model.model import predict
 
 def load_animation(url):
     r = requests.get(url)
