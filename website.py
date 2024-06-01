@@ -22,7 +22,7 @@ with st.container():
 
     with left_column:
         if input_text:
-            if predict(input_text) == 1:
+            if predict(input_text) == 0:
                 st.write("This news is True")
             else:
                 st.write("This news is Fake")
