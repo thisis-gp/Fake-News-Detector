@@ -1,3 +1,4 @@
+import subprocess
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 
@@ -23,10 +24,10 @@ from sklearn.model_selection import train_test_split
 train_data, test_data = train_test_split(df, test_size=0.2, random_state=42)
 
 # Save the datasets to CSV files
-train_data.to_csv('train1.csv', index=False)
-test_data.to_csv('test1.csv', index=False)
+train_data.to_csv('train.csv', index=False)
+test_data.to_csv('test.csv', index=False)
 
-new_df=pd.read_csv('train1.csv')
+new_df=pd.read_csv('train.csv')
 
 from nltk.stem import WordNetLemmatizer 
 #creating instance
@@ -68,8 +69,12 @@ from nltk.corpus import wordnet
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
 import spacy
-# Load English tokenizer, tagger, parser, NER, and word vectors
-nlp = spacy.load("en_core_web_sm")
+
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    nlp = spacy.load("en_core_web_sm")
 
 def preprocess(text):
     doc = nlp(text)
