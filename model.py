@@ -65,7 +65,8 @@ def get_wordnet_pos(word):
     return tag_dict.get(tag, wordnet.NOUN)
 
 from nltk.corpus import wordnet
-# nltk.download('averaged_perceptron_tagger')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
 import spacy
 # Load English tokenizer, tagger, parser, NER, and word vectors
 nlp = spacy.load("en_core_web_sm")
