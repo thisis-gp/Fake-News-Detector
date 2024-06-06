@@ -8,6 +8,9 @@ To use the Fake News Detection Tool, simply visit the following link:
 
 [Access Fake News Detection Tool](https://shukran-fake-news.streamlit.app/)
 
+## Screenshot
+![Fake News Detection Tool](web_screenshot.png)
+
 ## Features
 - **Text Preprocessing**: Tokenization, stopword removal, and stemming/lemmatization.
 - **Feature Engineering**: Conversion of text data into numerical format using TF-IDF vectorization.
@@ -18,4 +21,10 @@ To use the Fake News Detection Tool, simply visit the following link:
 ## Usage
 1. **Input News Article**: Enter the text of the news article you want to analyze into the provided text box.
 2. **Get Prediction**: Click on the "Predict" button to receive the prediction of whether the news article is fake or real.
+
+## Additional Resources
+- **Dataset**: The dataset used for training and testing the model is available [here](assets/dataset/).
+- **Presentation PowerPoint**: [Link to Presentation PPT](presentation/)
+- **Project Plan**: [Link to Project Plan](presentation/project_plan.md)
+- **Figma Designs**: [Link to Figma Designs](design/figma_design.png)
 
