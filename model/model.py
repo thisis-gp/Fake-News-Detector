@@ -42,19 +42,6 @@ from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
 stop_words.extend(['from', 'subject', 're', 'edu', 'use', 'ing'])
 
-# import nltk
-# import subprocess
-
-# # Download and unzip WordNet
-# try:
-#     nltk.data.find('wordnet.zip')
-# except:
-#     nltk.download('wordnet', download_dir='/kaggle/working/')
-#     command = "unzip /kaggle/working/corpora/wordnet.zip -d /kaggle/working/corpora"
-#     subprocess.run(command.split())
-
-# nltk.data.path.append('/kaggle/working/')
-
 # # Now you can import the NLTK resources as usual
 from nltk.corpus import wordnet
 
@@ -65,7 +52,6 @@ def get_wordnet_pos(word):
     tag_dict = {"J": wordnet.ADJ, "N": wordnet.NOUN, "V": wordnet.VERB, "R": wordnet.ADV}
     return tag_dict.get(tag, wordnet.NOUN)
 
-from nltk.corpus import wordnet
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
 import spacy
