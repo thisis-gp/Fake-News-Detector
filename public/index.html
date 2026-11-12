@@ -2,73 +2,166 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Crect width=%2724%27 height=%2724%27 rx=%276%27 fill=%27%233b6cff%27/%3E%3Cpath d=%27M6 12.5 10.5 17 18 8%27 fill=%27none%27 stroke=%27white%27 stroke-width=%272.4%27/%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fake News Detector</title>
-<link rel="icon" href="data:,">
+<title>TruthGuard: does this text read like fake news?</title>
+<meta name="description" content="A small, honest fake-news classifier. Paste an article and see which set of a public dataset it resembles, and which words pushed the model. TF-IDF and logistic regression, 98% on its own test set, with the caveats stated.">
 <style>
-  :root { --bg:#fafaf8; --fg:#1b1b1b; --muted:#5c5c5c; --card:#fff; --line:#d9d9d4; --accent:#1d4ed8; --warn-bg:#fff6df; --warn-line:#e0b84a; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#141414; --fg:#ececec; --muted:#a3a3a3; --card:#1e1e1e; --line:#3a3a3a; --accent:#7aa2ff; --warn-bg:#2b2410; --warn-line:#8a6d1c; } }
+  :root { --bg:#05060a; --panel:#0c0f18; --line:#1c2233; --ink:#f3f5fb; --muted:#9aa3b8; --blue:#3b6cff; --violet:#8a3cff; --cyan:#35d0ee; --good:#34d399; --bad:#fb7185; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, sans-serif; }
-  main { max-width:720px; margin:0 auto; padding:24px 16px 48px; }
-  h1 { font-size:1.6rem; margin:0 0 4px; }
-  .sub { color:var(--muted); margin:0 0 16px; }
-  .note { background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:8px; padding:12px 14px; margin-bottom:20px; font-size:.95rem; }
-  textarea { width:100%; min-height:200px; padding:12px; font:inherit; color:inherit; background:var(--card); border:1px solid var(--line); border-radius:8px; resize:vertical; }
-  button { margin-top:10px; padding:10px 20px; font:inherit; font-weight:600; color:#fff; background:var(--accent); border:0; border-radius:8px; cursor:pointer; }
-  button:disabled { opacity:.5; cursor:default; }
-  textarea:focus-visible, button:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
-  #result { margin-top:20px; padding:16px; background:var(--card); border:1px solid var(--line); border-radius:8px; }
-  #label { font-size:1.2rem; font-weight:700; margin:0; }
-  ul { padding-left:20px; margin:6px 0 0; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif; -webkit-font-smoothing:antialiased; }
+  a { color:inherit; }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 24px; }
+  nav { display:flex; align-items:center; justify-content:space-between; padding:20px 0; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:-.02em; text-decoration:none; }
+  .brand i { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,var(--blue),var(--violet)); display:grid; place-items:center; }
+  .brand svg { width:16px; height:16px; }
+  nav .links { display:flex; gap:22px; font-size:14px; color:var(--muted); }
+  nav .links a { text-decoration:none; } nav .links a:hover { color:var(--ink); }
+  .hero { text-align:center; padding:56px 0 24px; }
+  .pill { display:inline-flex; align-items:center; gap:8px; border:1px solid #17313a; color:var(--cyan); border-radius:999px; padding:6px 14px; font-size:13px; }
+  h1 { font-size:clamp(2.4rem, 7vw, 4.6rem); line-height:1.05; letter-spacing:-.04em; margin:22px 0 18px; font-weight:800; }
+  .grad { background:linear-gradient(90deg,#6f93ff,#a77bff 55%,var(--cyan)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .lede { max-width:620px; margin:0 auto; color:#c3cadb; font-size:1.125rem; }
+  .cta { display:flex; justify-content:center; gap:12px; margin-top:30px; flex-wrap:wrap; }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:14px 22px; border-radius:12px; font:inherit; font-weight:600; text-decoration:none; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; }
+  .btn.primary { background:linear-gradient(90deg,var(--blue),var(--violet)); border-color:transparent; }
+  .btn:focus-visible, textarea:focus-visible, a:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+  .btn:disabled { opacity:.55; cursor:wait; }
+  .orb { position:relative; width:150px; height:150px; margin:44px auto 0; }
+  .orb span { position:absolute; inset:0; border-radius:50%; border:1px solid rgba(80,110,255,.28); }
+  .orb span:nth-child(2) { inset:14px; border-color:rgba(138,60,255,.3); } .orb span:nth-child(3) { inset:28px; border-color:rgba(53,208,238,.3); }
+  .orb b { position:absolute; inset:46px; border-radius:50%; background:linear-gradient(135deg,var(--blue),var(--violet)); display:grid; place-items:center; box-shadow:0 0 50px rgba(90,80,255,.45); }
+  .orb svg { width:30px; height:30px; }
+  @media (prefers-reduced-motion:no-preference) { .orb span { animation:ring 4s ease-in-out infinite; } .orb span:nth-child(2) { animation-delay:.5s; } .orb span:nth-child(3) { animation-delay:1s; } }
+  @keyframes ring { 50% { transform:scale(1.06); opacity:.55; } }
+  section { padding:72px 0 8px; }
+  h2 { font-size:clamp(1.7rem, 4vw, 2.5rem); letter-spacing:-.03em; margin:0 0 10px; }
+  .sub { color:var(--muted); margin:0 0 30px; max-width:640px; }
+  .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px; }
+  .card .n { color:var(--cyan); font-weight:700; font-size:13px; letter-spacing:.04em; }
+  .card h3 { margin:8px 0 6px; font-size:1.05rem; } .card p { margin:0; color:var(--muted); font-size:.95rem; }
+  .try { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:26px; }
+  textarea { width:100%; min-height:190px; resize:vertical; background:#070910; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:16px; font:inherit; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; flex-wrap:wrap; }
   .muted { color:var(--muted); font-size:.9rem; }
-  [hidden] { display:none; }
+  .samples { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+  .samples button { background:none; border:1px solid var(--line); color:var(--muted); border-radius:999px; padding:6px 14px; cursor:pointer; font:inherit; font-size:.85rem; }
+  .samples button:hover { color:var(--ink); border-color:#33405f; }
+  #result { margin-top:22px; border-top:1px solid var(--line); padding-top:22px; }
+  #label { font-size:1.7rem; font-weight:800; letter-spacing:-.03em; margin:0; }
+  #label.fake { color:var(--bad); } #label.true { color:var(--good); }
+  .meter { height:10px; border-radius:99px; background:#141a2a; overflow:hidden; margin:14px 0 6px; }
+  .meter i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--good),#facc15,var(--bad)); transition:width .5s cubic-bezier(.16,1,.3,1); }
+  .scale { display:flex; justify-content:space-between; font-size:.78rem; color:var(--muted); }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; padding:0; list-style:none; }
+  .chips li { background:#10162a; border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:.85rem; }
+  .chips li.f { border-color:rgba(251,113,133,.4); } .chips li.t { border-color:rgba(52,211,153,.4); }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .stat b { display:block; font-size:2rem; letter-spacing:-.03em; }
+  .caveat { border:1px solid #4a3a12; background:#17130a; color:#e8d9a8; border-radius:14px; padding:18px 20px; margin-top:18px; font-size:.95rem; }
+  .err { color:var(--bad); }
+  footer { margin-top:80px; padding:28px 0 48px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  @media (max-width:760px) { .steps, .stats { grid-template-columns:1fr 1fr; } nav .links { display:none; } }
+  @media (max-width:440px) { .steps, .stats { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
-<main>
-  <h1>Fake News Detector</h1>
-  <p class="sub">A classroom text classifier: TF-IDF + logistic regression, trained on the Kaggle Fake and Real News dataset.</p>
-  <div class="note" role="note">
-    <strong>Read this first.</strong> This is a classroom project, not a fact checker. It scored about 98% on its own dataset, but that number is inflated by style cues: nearly all True articles in the data are from Reuters, so the model partly learns Reuters-style writing. It can be wrong, especially on other sources, topics or years. Do not use it to decide what is true.
-  </div>
-  <label for="text">Paste a news article</label>
-  <textarea id="text" maxlength="50000" placeholder="Paste article text here (English)"></textarea>
-  <button id="check" type="button">Check</button>
-  <div id="result" aria-live="polite" hidden>
-    <p id="label"></p>
-    <p id="conf" class="muted"></p>
-    <div id="wordsBox"><strong>Words that pushed the model this way</strong><ul id="words"></ul></div>
-    <p class="muted" id="foot">This only says which set of the dataset the writing resembles.</p>
-  </div>
-  <p class="muted"><a href="https://github.com/thisis-gp/Fake-News-Detector">Source and measured results</a></p>
-</main>
+<div class="wrap">
+  <nav aria-label="Main">
+    <a class="brand" href="#top"><i aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg></i>TruthGuard</a>
+    <div class="links"><a href="#how">How it works</a><a href="#try">Try it</a><a href="#results">Results</a><a href="https://github.com/thisis-gp/Fake-News-Detector" target="_blank" rel="noreferrer">Source</a></div>
+  </nav>
+
+  <header class="hero" id="top">
+    <span class="pill">Open source classroom project</span>
+    <h1><span class="grad">Does this text read</span><br>like fake news?</h1>
+    <p class="lede">Paste an article. A small machine-learning model tells you which set of a public dataset it resembles, and shows the exact words that pushed it there.</p>
+    <div class="cta"><a class="btn primary" href="#try">Check a text</a><a class="btn" href="#results">See the real numbers</a></div>
+    <div class="orb" aria-hidden="true"><span></span><span></span><span></span><b><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.2 11 14.7l4.6-5"/></svg></b></div>
+  </header>
+
+  <section id="how">
+    <h2>How it works</h2>
+    <p class="sub">No chatbot and no black box. Four plain steps you can read in the source.</p>
+    <div class="steps">
+      <div class="card"><span class="n">01</span><h3>Clean</h3><p>Lowercase the text, drop punctuation and common stop words.</p></div>
+      <div class="card"><span class="n">02</span><h3>Weigh words</h3><p>TF-IDF scores each word by how distinctive it is across 38,639 articles.</p></div>
+      <div class="card"><span class="n">03</span><h3>Classify</h3><p>Logistic regression turns those scores into a probability.</p></div>
+      <div class="card"><span class="n">04</span><h3>Explain</h3><p>You see the words that pushed the result toward fake or real.</p></div>
+    </div>
+  </section>
+
+  <section id="try">
+    <h2>Try it</h2>
+    <p class="sub">English text works best. Nothing is stored: the text is scored and forgotten.</p>
+    <div class="try">
+      <label for="text" class="muted">Paste an article or a message</label>
+      <textarea id="text" maxlength="50000" placeholder="Paste text here..."></textarea>
+      <div class="samples"><span class="muted">Or start with:</span>
+        <button type="button" data-s="fake">a sensational headline</button>
+        <button type="button" data-s="real">a wire-style report</button>
+      </div>
+      <div class="row"><span class="muted"><span id="count">0</span> characters</span><button id="check" class="btn primary" type="button">Check this text</button></div>
+      <div id="result" aria-live="polite" hidden>
+        <p id="label"></p>
+        <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+        <div class="scale" aria-hidden="true"><span>Resembles real news</span><span>Resembles fake news</span></div>
+        <p class="muted" id="conf"></p>
+        <p style="margin:14px 0 4px"><strong>Words that pushed the model</strong></p>
+        <ul class="chips" id="words"></ul>
+        <p class="muted" style="margin-top:14px">This only says which set the <em>writing style</em> resembles. It does not check facts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="results">
+    <h2>The real numbers</h2>
+    <p class="sub">Measured on a held-out 20% of 38,639 deduplicated articles (Kaggle Fake and Real News).</p>
+    <div class="card stats">
+      <div class="stat"><b>98.5%</b><span class="muted">accuracy</span></div>
+      <div class="stat"><b>99.1%</b><span class="muted">precision (fake)</span></div>
+      <div class="stat"><b>97.5%</b><span class="muted">recall (fake)</span></div>
+      <div class="stat"><b>97.9%</b><span class="muted">accuracy without Reuters cues</span></div>
+    </div>
+    <div class="caveat"><strong>Read this before you trust the score.</strong> The real articles in this dataset are almost all from one agency (Reuters), so a model can score high from style alone. That is a quirk of the data, not proof it can spot fake news in the wild. Expect it to be much weaker on other sources. Do not use it to decide what is true.</div>
+  </section>
+
+  <footer><span>TruthGuard: a classroom project by D A Gurupriyan.</span><span><a href="https://github.com/thisis-gp/Fake-News-Detector" target="_blank" rel="noreferrer">Source on GitHub</a></span></footer>
+</div>
 <script>
-const $ = (id) => document.getElementById(id);
-$("check").addEventListener("click", async () => {
-  const text = $("text").value;
-  if (!text.trim()) return;
-  const btn = $("check");
-  btn.disabled = true;
-  try {
-    const r = await fetch("/api/predict", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || r.statusText);
-    $("label").textContent = d.label === "fake" ? "Looks like the Fake set" : "Looks like the True set";
-    $("conf").textContent = "Model confidence: " + (d.confidence * 100).toFixed(1) + "% (" + d.knownWords + " known words used)";
-    const ul = $("words");
-    ul.replaceChildren(...d.topWords.map((w) => Object.assign(document.createElement("li"), { textContent: w.word })));
-    $("wordsBox").hidden = d.topWords.length === 0;
-    $("result").hidden = false;
-  } catch (e) {
-    $("label").textContent = "Error: " + e.message;
-    $("conf").textContent = "";
-    $("wordsBox").hidden = true;
-    $("result").hidden = false;
-  } finally {
-    btn.disabled = false;
-  }
-});
+  const $ = (id) => document.getElementById(id);
+  const text = $("text"), btn = $("check");
+  const SAMPLES = {
+    fake: "SHOCKING photo shows cops hiding the truth! Share this before they delete it. Mainstream media will never show you what really happened last night.",
+    real: "WASHINGTON (Reuters) - The U.S. Senate on Tuesday voted to approve a spending bill, officials said, sending the measure to the House of Representatives for a vote later this week."
+  };
+  text.addEventListener("input", () => { $("count").textContent = text.value.length.toLocaleString(); });
+  document.querySelectorAll(".samples button").forEach((b) => b.addEventListener("click", () => { text.value = SAMPLES[b.dataset.s]; text.dispatchEvent(new Event("input")); text.focus(); }));
+  btn.addEventListener("click", async () => {
+    const value = text.value.trim();
+    if (!value) { text.focus(); return; }
+    btn.disabled = true; btn.textContent = "Checking...";
+    const res = $("result"), label = $("label");
+    try {
+      const r = await fetch("/api/predict", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: value }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Request failed");
+      res.hidden = false;
+      const fake = d.label === "fake";
+      label.className = fake ? "fake" : "true";
+      label.textContent = fake ? "Reads like the Fake set" : "Reads like the Real set";
+      $("bar").style.width = Math.round(d.pFake * 100) + "%";
+      $("conf").textContent = Math.round(d.confidence * 100) + "% confident, based on " + d.knownWords + " recognised words.";
+      const ul = $("words"); ul.textContent = "";
+      (d.topWords || []).forEach((w) => { const li = document.createElement("li"); li.className = w.weight > 0 ? "f" : "t"; li.textContent = w.word; ul.appendChild(li); });
+      res.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch (e) {
+      res.hidden = false; label.className = "err"; label.textContent = "Could not check that text."; $("conf").textContent = String(e.message || e); $("words").textContent = ""; $("bar").style.width = "0";
+    } finally { btn.disabled = false; btn.textContent = "Check this text"; }
+  });
 </script>
 </body>
 </html>
