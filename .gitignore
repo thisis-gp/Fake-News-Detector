@@ -2,3 +2,6 @@ __pycache__/
 .idea/
 train.csv
 test.csv
+
+.vercel
+.env*

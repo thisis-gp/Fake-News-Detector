@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fake News Detector</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#fafaf8; --fg:#1b1b1b; --muted:#5c5c5c; --card:#fff; --line:#d9d9d4; --accent:#1d4ed8; --warn-bg:#fff6df; --warn-line:#e0b84a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141414; --fg:#ececec; --muted:#a3a3a3; --card:#1e1e1e; --line:#3a3a3a; --accent:#7aa2ff; --warn-bg:#2b2410; --warn-line:#8a6d1c; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:1.6rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  .note { background:var(--warn-bg); border:1px solid var(--warn-line); border-radius:8px; padding:12px 14px; margin-bottom:20px; font-size:.95rem; }
+  textarea { width:100%; min-height:200px; padding:12px; font:inherit; color:inherit; background:var(--card); border:1px solid var(--line); border-radius:8px; resize:vertical; }
+  button { margin-top:10px; padding:10px 20px; font:inherit; font-weight:600; color:#fff; background:var(--accent); border:0; border-radius:8px; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  textarea:focus-visible, button:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  #result { margin-top:20px; padding:16px; background:var(--card); border:1px solid var(--line); border-radius:8px; }
+  #label { font-size:1.2rem; font-weight:700; margin:0; }
+  ul { padding-left:20px; margin:6px 0 0; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  [hidden] { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Fake News Detector</h1>
+  <p class="sub">A classroom text classifier: TF-IDF + logistic regression, trained on the Kaggle Fake and Real News dataset.</p>
+  <div class="note" role="note">
+    <strong>Read this first.</strong> This is a classroom project, not a fact checker. It scored about 98% on its own dataset, but that number is inflated by style cues: nearly all True articles in the data are from Reuters, so the model partly learns Reuters-style writing. It can be wrong, especially on other sources, topics or years. Do not use it to decide what is true.
+  </div>
+  <label for="text">Paste a news article</label>
+  <textarea id="text" maxlength="50000" placeholder="Paste article text here (English)"></textarea>
+  <button id="check" type="button">Check</button>
+  <div id="result" aria-live="polite" hidden>
+    <p id="label"></p>
+    <p id="conf" class="muted"></p>
+    <div id="wordsBox"><strong>Words that pushed the model this way</strong><ul id="words"></ul></div>
+    <p class="muted" id="foot">This only says which set of the dataset the writing resembles.</p>
+  </div>
+  <p class="muted"><a href="https://github.com/thisis-gp/Fake-News-Detector">Source and measured results</a></p>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+$("check").addEventListener("click", async () => {
+  const text = $("text").value;
+  if (!text.trim()) return;
+  const btn = $("check");
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/predict", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || r.statusText);
+    $("label").textContent = d.label === "fake" ? "Looks like the Fake set" : "Looks like the True set";
+    $("conf").textContent = "Model confidence: " + (d.confidence * 100).toFixed(1) + "% (" + d.knownWords + " known words used)";
+    const ul = $("words");
+    ul.replaceChildren(...d.topWords.map((w) => Object.assign(document.createElement("li"), { textContent: w.word })));
+    $("wordsBox").hidden = d.topWords.length === 0;
+    $("result").hidden = false;
+  } catch (e) {
+    $("label").textContent = "Error: " + e.message;
+    $("conf").textContent = "";
+    $("wordsBox").hidden = true;
+    $("result").hidden = false;
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

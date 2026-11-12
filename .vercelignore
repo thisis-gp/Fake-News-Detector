@@ -1,0 +1,15 @@
+assets
+design
+presentation
+model
+fake-news-detector.ipynb
+*.png
+.devcontainer
+requirements.txt
+website.py
+train.py
+export_model.py
+parity_check.py
+parity_check.js
+Dockerfile
+docker-compose.yml

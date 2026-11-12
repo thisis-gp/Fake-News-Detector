@@ -17,7 +17,7 @@ Dataset: Kaggle "Fake and Real News" (`assets/Dataset/Fake.csv`, `True.csv`), 38
 
 This dataset is easy for a style reason, not because the model understands truth. Almost every article in the True set comes from Reuters and starts with a dateline such as "WASHINGTON (Reuters) -". The Fake set comes from other sites with different habits. A model can score high by learning those habits. Removing the Reuters cues only dropped accuracy by about 0.6 points, which means other style differences (topics, punctuation, wording) still give the answer away. Expect much worse results on articles from other sources, other years, or other topics. The score measures how well the model separates this dataset, nothing more.
 
-## Run it
+## Run it locally (Streamlit, alternative)
 
 ```
 pip install -r requirements.txt
@@ -34,7 +34,11 @@ docker compose up --build   # http://127.0.0.1:18501
 
 ## Live demo
 
-No public demo is running right now. The earlier Streamlit Cloud link no longer works. The page at fake-news-detector-beryl.vercel.app is not built from this repository, and its accuracy and technology claims are not backed by anything here.
+https://fake-news-detector-alpha-red.vercel.app
+
+How the Vercel build works: there is no Python at runtime. `export_model.py` writes the trained vocabulary, idf weights and logistic regression coefficients to `api/model.json`. `api/_core.js` repeats the scikit-learn steps in JavaScript (lowercase, word tokens, English stop words, sublinear tf, idf, L2 norm, logistic regression), and `api/predict.js` serves it. `public/index.html` is the page. `python parity_check.py` compares the JavaScript output with scikit-learn on 2,000 held-out articles plus edge cases; the largest probability difference was 2.6e-13. `model/model.joblib`, the Streamlit app (`website.py`) and the Dockerfile stay for local use. After retraining, run `python export_model.py`.
+
+The earlier page at fake-news-detector-beryl.vercel.app is not built from this repository, and its accuracy and technology claims are not backed by anything here.
 
 ## Repository notes
 
