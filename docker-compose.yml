@@ -1,0 +1,7 @@
+services:
+  truthguard:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18501:8501"
+    mem_limit: 768m

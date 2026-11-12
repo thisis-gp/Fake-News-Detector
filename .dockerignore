@@ -1,0 +1,7 @@
+.git
+.idea
+__pycache__
+assets/Dataset
+fake-news-detector.ipynb
+presentation
+design

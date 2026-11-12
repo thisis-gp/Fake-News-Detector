@@ -1,0 +1,21 @@
+{
+  "dataset": "Kaggle Fake and Real News (ISOT), deduplicated by text",
+  "rows": 38639,
+  "split": "stratified 80/20, random_state=42",
+  "as_is": {
+    "train_size": 30911,
+    "test_size": 7728,
+    "accuracy": 0.9849,
+    "fake_precision": 0.9913,
+    "fake_recall": 0.9751,
+    "fake_f1": 0.9831
+  },
+  "reuters_cues_removed": {
+    "train_size": 30911,
+    "test_size": 7728,
+    "accuracy": 0.9785,
+    "fake_precision": 0.9868,
+    "fake_recall": 0.9653,
+    "fake_f1": 0.976
+  }
+}

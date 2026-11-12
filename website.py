@@ -1,36 +1,20 @@
 import streamlit as st
-import requests
-from streamlit_lottie import st_lottie
+
 from model.model import predict
 
-def load_animation(url):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
-
-news_animation = load_animation("https://lottie.host/51c21153-c45b-4c30-b428-142bbc6a7aec/sph9K6z6Ec.json")
-
-st.set_page_config(page_title="Fake News Detector", page_icon="assets/news_favicon.png", layout="wide")
+st.set_page_config(page_title="Fake News Detector", page_icon="assets/news_favicon.png")
 
 st.title("Fake News Detector")
-input_text = st.text_input("Enter news article: ")
+st.caption(
+    "A classroom classifier (TF-IDF + logistic regression) trained on the Kaggle Fake/True news "
+    "dataset. It learns the writing style of that dataset. It does not check facts."
+)
 
-with st.container():
-    st.write("---")
-    left_column, right_column = st.columns(2)
+text = st.text_area("Paste a news article", height=240)
 
-    with left_column:
-        if input_text:
-            if predict(input_text) == 0:
-                st.write("This news is True")
-            else:
-                st.write("This news is Fake")
-        else:
-            st.write("Enter input text")
-
-    with right_column:
-        if news_animation:
-            st_lottie(news_animation, height=300, key="news")
-        else:
-            st.write("Failed to load animation.")
+if st.button("Classify", disabled=not text.strip()):
+    is_fake, confidence = predict(text)
+    label = "Looks like the Fake set" if is_fake else "Looks like the True set"
+    st.subheader(label)
+    st.write(f"Model confidence: {confidence:.0%}")
+    st.info("Short or non-US-politics text is outside what this model was trained on. Do not rely on it.")
